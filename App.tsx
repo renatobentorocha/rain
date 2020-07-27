@@ -29,38 +29,41 @@ const runProgress = (position: Value<number>, toValue: Animated.Adaptable<number
       set(state.finished, 0),
       set(state.frameTime, 0),
       set(state.time, 0),
-      set(state.position, position)
+      set(state.position, 0)
     ]),
     state.position
   ])
   
 }
 
-export default function App() {
-  const position = useRef(new Value<number>(0)).current;
-  const toValue = useRef(new Value<number>(height)).current;
-
-  const elements = Array.from({length: 100}).map((_, index: number) => {
+const getElement = (position: Animated.Value<number>, toValue: Animated.Value<number>, clock: Animated.Clock) => {
+  return Array.from({length: 100}).map((_, index: number) => {
     const horizontal = Math.random() * width;
     const vertical = Math.random() * height;
-    const translateY = runProgress(position, add(toValue, vertical), new Clock());
+    const translateY = runProgress(position, add(toValue, vertical), clock);
 
     return (
       <Animated.View key={index.toString()} style={
         [
           styles.rain_wrapper,
-          {left: horizontal, top: -vertical}, 
+          {left: horizontal, top: vertical}, 
           {transform: [{translateY}]}
         ]}>
         <Animated.View style={styles.rain_drop}/>
       </Animated.View>
     )
   });
+}
+
+export default function App() {
+  const position = useRef(new Value<number>(0)).current;
+  const toValue = useRef(new Value<number>(height)).current;
+  const clock = useRef(new Clock()).current;
 
   return (
     <View style={styles.container}>
       <Image style={StyleSheet.absoluteFillObject} source={require("./city.jpg")}/>
-      {elements}
+      {getElement(position, toValue, new Clock())}
       <StatusBar style="light" hidden />
     </View>
   );
