@@ -1,7 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useRef } from 'react';
 import { StyleSheet, Dimensions, View, Image } from 'react-native';
-import Animated, { Clock, Easing, block, timing, cond, eq, set, not, Value, useCode, startClock, clockRunning, add } from "react-native-reanimated";
+import Animated, { Clock, Easing, block, timing, cond, eq, set, not, Value, startClock, clockRunning, add } from "react-native-reanimated";
+
 const {height, width} = Dimensions.get("screen");
 const RAIN_DROP_SIZE = height * 0.02;
 const ROUNDED = false
@@ -41,8 +42,8 @@ const rainDrop = (index: string, horizontal: number, vertical: number, translate
   <Animated.View key={index} style={
     [
       styles.rain_drop2,
-      {left: horizontal, top: -vertical}, 
-      {transform: [{translateY}]}
+      {left: horizontal, top: vertical}, 
+      {transform: [{rotateZ: '-3deg'}, {translateY}, {rotateZ: '-3deg'}]}
     ]}
   />
 );
@@ -51,19 +52,21 @@ const roundedRainDrop = (index: string, horizontal: number, vertical: number, tr
   <Animated.View key={index} style={
     [
       styles.rain_wrapper,
-      {left: horizontal, top: -vertical}, 
+      {left: horizontal, top: vertical}, 
       {transform: [{translateY}]}
     ]}>
     <Animated.View style={styles.rain_drop}/>
   </Animated.View>
 );
 
-const getElement = (position: Animated.Value<number>, toValue: Animated.Value<number>, clock: Animated.Clock) => {
-  return Array.from({length: 500}).map((_, index: number) => {
-    const horizontal = Math.random() * width;
+const ELEMENT_NUMBER = 500
+
+const getElement = (position: Animated.Value<number>, toValue: Animated.Value<number>, clocks: Animated.Clock[]) => {
+  return Array.from({length: ELEMENT_NUMBER}).map((_, index: number) => {
+    const horizontal = (Math.random() * width*2) - width/2;
     const vertical = Math.random() * height;
     const duration = (Math.random() * 3000 + 2000) - 500;
-    const translateY = runProgress(duration, add(toValue, vertical), clock);
+    const translateY = runProgress(duration, add(toValue, vertical), clocks[index]);
 
     return ROUNDED ? 
       roundedRainDrop(index.toString(), horizontal, -vertical, translateY) :
@@ -71,15 +74,16 @@ const getElement = (position: Animated.Value<number>, toValue: Animated.Value<nu
   });
 }
 
+const getClocks = () => Array.from({length: ELEMENT_NUMBER}).map((_, index: number) => new Clock());
+
 export default function App() {
   const position = useRef(new Value<number>(0)).current;
   const toValue = useRef(new Value<number>(height)).current;
-  const clock = useRef(new Clock()).current;
 
   return (
     <View style={styles.container}>
       <Image style={StyleSheet.absoluteFillObject} source={require("./city.jpg")}/>
-      {getElement(position, toValue, clock)}
+      {getElement(position, toValue, getClocks())}
       <StatusBar style="light" hidden />
     </View>
   );
@@ -98,7 +102,7 @@ const styles = StyleSheet.create({
   rain_drop: {
     height: RAIN_DROP_SIZE,
     width: RAIN_DROP_SIZE,
-    backgroundColor: "#444",
+    backgroundColor: "#c3c3c3",
     
     borderTopLeftRadius: RAIN_DROP_SIZE/2,
     borderBottomLeftRadius: RAIN_DROP_SIZE/2,
@@ -113,7 +117,7 @@ const styles = StyleSheet.create({
     top: height/2, 
     left: width/2, 
     width: 1, 
-    height: 40, 
-    backgroundColor: "#444",
+    height: 25, 
+    backgroundColor: "#c3c3c3",
   }
 });
